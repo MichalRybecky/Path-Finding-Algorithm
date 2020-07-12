@@ -29,6 +29,17 @@ def square_erease(x, y):
     c.create_rectangle(x, y, x + 50, y + 50, fill="#E4E4E4")
 
 
+def square_overlap(x, y, type):
+    if type == "a_overlap_b":
+        if b_point_pos:
+            if x == b_point_pos[0] and y == b_point_pos[1]:
+                b_point_pos.clear()
+    elif type == "b_overlap_a":
+        if a_point_pos:
+            if x == a_point_pos[0] and y == a_point_pos[1]:
+                a_point_pos.clear()
+
+
 def create_wall(event):
     x, y = square_clicked(event.x, event.y)
     if x < 50 or x >= 750 or y < 50 or y >= 750:
@@ -50,11 +61,13 @@ def create_a(event):
         if a_point_pos:
             square_erease(a_point_pos[0], a_point_pos[1])
             a_point_pos.clear()
+        square_overlap(x, y, "a_overlap_b")
         c.create_rectangle(x, y, x + 50, y + 50, fill = "blue")
         c.create_text(x + 25, y + 25, text="A", font="arial 20 bold")
         a_point_pos.append(x)
         a_point_pos.append(y)
     print(f"A point: {a_point_pos}")
+    print(f"B point: {b_point_pos}")
 
 
 def create_b(event):
@@ -65,11 +78,14 @@ def create_b(event):
         if b_point_pos:
             square_erease(b_point_pos[0], b_point_pos[1])
             b_point_pos.clear()
+        square_overlap(x, y, "b_overlap_a")
         c.create_rectangle(x, y, x + 50, y + 50, fill = "blue")
         c.create_text(x + 25, y + 25, text="B", font="arial 20 bold")
         b_point_pos.append(x)
         b_point_pos.append(y)
-        print(f"B point: {b_point_pos}")
+    print(f"A point: {a_point_pos}")
+    print(f"B point: {b_point_pos}")
+
 
 
 
