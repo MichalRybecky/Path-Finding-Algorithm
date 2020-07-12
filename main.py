@@ -38,6 +38,10 @@ def square_overlap(x, y, type):
         if a_point_pos:
             if x == a_point_pos[0] and y == a_point_pos[1]:
                 a_point_pos.clear()
+    elif type == "overlap_wall":
+        if walls_pos:
+            if [x, y] in walls_pos:
+                walls_pos.remove([x, y])
 
 
 def create_wall(event):
@@ -50,7 +54,10 @@ def create_wall(event):
     else:
         c.create_rectangle(x, y, x + 50, y + 50, fill = "grey")
         walls_pos.append([x, y])
+    print(f"A point: {a_point_pos}")
+    print(f"B point: {b_point_pos}")
     print(f"Walls: {walls_pos}")
+    print("")
 
 
 def create_a(event):
@@ -62,12 +69,15 @@ def create_a(event):
             square_erease(a_point_pos[0], a_point_pos[1])
             a_point_pos.clear()
         square_overlap(x, y, "a_overlap_b")
+        square_overlap(x, y, "overlap_wall")
         c.create_rectangle(x, y, x + 50, y + 50, fill = "blue")
         c.create_text(x + 25, y + 25, text="A", font="arial 20 bold")
         a_point_pos.append(x)
         a_point_pos.append(y)
     print(f"A point: {a_point_pos}")
     print(f"B point: {b_point_pos}")
+    print(f"Walls: {walls_pos}")
+    print("")
 
 
 def create_b(event):
@@ -79,14 +89,15 @@ def create_b(event):
             square_erease(b_point_pos[0], b_point_pos[1])
             b_point_pos.clear()
         square_overlap(x, y, "b_overlap_a")
+        square_overlap(x, y, "overlap_wall")
         c.create_rectangle(x, y, x + 50, y + 50, fill = "blue")
         c.create_text(x + 25, y + 25, text="B", font="arial 20 bold")
         b_point_pos.append(x)
         b_point_pos.append(y)
     print(f"A point: {a_point_pos}")
     print(f"B point: {b_point_pos}")
-
-
+    print(f"Walls: {walls_pos}")
+    print("")
 
 
 a_point_pos = []
