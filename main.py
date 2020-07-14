@@ -1,4 +1,5 @@
 import queue
+import math
 from tkinter import *
 from operator import attrgetter
 
@@ -32,43 +33,36 @@ class Node(object):
         self.f = 0
         self.temp_neighbour_list = []
         self.neighbour_list = []
+        self.parent = []
 
     def get_g_cost(self):
-        if self.x == a_point_pos[0] and self.y == a_point_pos [1]:
+        if self.x == a_point_pos[0] and self.y == a_point_pos[1]:
             self.g = 0
         else:
-            g_cost = []
-            g_cost.clear()
-            g_cost.append(abs(a_point_pos[0] - self.x))
-            g_cost.append(abs(a_point_pos[1] - self.y))
+            num_of_x_squares = (abs(a_point_pos[0] - self.x))
+            num_of_y_squares = (abs(a_point_pos[1] - self.y))
 
-            num_of_x_squares = int(g_cost[0])
-            num_of_y_squares = int(g_cost[1])
-
-            self.g = abs((num_of_x_squares - num_of_y_squares) + (((num_of_y_squares - 50) / 50) * 70.7))
+            d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
+            d = math.sqrt(d)
+            self.g = d
 
     def get_h_cost(self):
         # Getting node H cost
         if self.x == b_point_pos[0] and self.y == b_point_pos [1]:
             self.h = 0
         else:
-            h_cost = []
-            h_cost.clear()
-            h_cost.append(abs(b_point_pos[0] - self.x))
-            h_cost.append(abs(b_point_pos[1] - self.y))
-
-            num_of_x_squares = int(h_cost[0])
-            num_of_y_squares = int(h_cost[1])
-
-            self.h = abs((num_of_x_squares - num_of_y_squares) + (((num_of_y_squares - 50) / 50) * 70.7))
+            num_of_x_squares = (abs(b_point_pos[0] - self.x))
+            num_of_y_squares = (abs(b_point_pos[1] - self.y))
+            d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
+            self.h = math.sqrt(d)
 
     def get_f_cost(self):
         # Getting node F cost
         self.f = self.g + self.h
 
-    def draw_node(self, x, y, g, h, f):
+    def draw_node(self, color):
         # Draw square and G, H and F cost in square
-        c.create_rectangle(self.x, self.y, self.x + 50, self.y + 50, fill="green")
+        c.create_rectangle(self.x, self.y, self.x + 50, self.y + 50, fill=color)
         c.create_text(self.x + 10, self.y + 10, text=int(self.g))
         c.create_text(self.x + 40, self.y + 10, text=int(self.h))
         c.create_text(self.x + 25, self.y + 30, text=int(self.f), font="arial 15 bold")
@@ -89,15 +83,21 @@ class Node(object):
         nodes_to_delete = []
         nodes_to_delete.clear()
 
-        # Deleting nodes that are not on the grid
+        # Deleting nodes that are not on the grid or are walls
         for node in self.temp_neighbour_list:
-            if node[0] < 50 or node[0] >= 750 or node[1] < 50 or node[1] >= 750:
+            if node[0] < 50 or node[0] >= 750 or node[1] < 50 or node[1] >= 750 or node in walls_pos or node in closed_l:
                 nodes_to_delete.append(node)
         for node in nodes_to_delete:
             self.temp_neighbour_list.remove(node)
 
         for node in self.temp_neighbour_list:
             self.neighbour_list.append(Node(node[0], node[1]))
+
+        for node in self.neighbour_list:
+            node.get_g_cost()
+            node.get_h_cost()
+            node.get_f_cost()
+            node.draw_node("green")
 
 
     def get_neighbour_data(self, x, y):
@@ -110,6 +110,9 @@ class Node(object):
         min_f_cost = min(self.neighbour_list, key=attrgetter('f'))
         return [min_f_cost.x, min_f_cost.y]
 
+def lowest_f_cost_not_class():
+    min_f_cost = min(open_l, key=attrgetter('f'))
+    return min_f_cost
 
 def main():
     # There is no A, B or both points on the screen
@@ -118,22 +121,19 @@ def main():
     # Main loop
     else:
         current = Node(a_point_pos[0], a_point_pos[1])
+        b_node = Node(b_point_pos[0], b_point_pos[1])
         open_l.append(current)
-        while True:
-            current.get_neighbours(current.x, current.y)
-            current.get_neighbour_data(current.x, current.y)
-            current = current.lowest_f_cost()
-            current = Node(current[0], current[1])
-            current.get_g_cost()
-            current.get_h_cost()
-            current.get_f_cost()
-            print(current.f)
-            c.create_rectangle(current.x, current.y, current.x + 50, current.y + 50, fill = "green")
+        current.get_neighbours(current.x, current.y)
+        current.get_neighbour_data(current.x, current.y)
+        current.lowest_f_cost()
 
 
+            # open_l.append(current)
+            # current.get_neighbours(current.x, current.y)
+            # current.get_neighbour_data(current.x, current.y)
+            # current = current.lowest_f_cost()
+            # current = Node(current[0], current[1])
 
-
-            break
 
 
 
@@ -165,6 +165,10 @@ def clear():
     all_neighbours = []
     current = []
     mainboard()
+
+
+def win():
+    print("done")
 
 
 def square_clicked(x, y):
@@ -225,10 +229,6 @@ def create_a(event):
         c.create_text(x + 25, y + 25, text="A", font="arial 20 bold")
         a_point_pos.append(x)
         a_point_pos.append(y)
-    print(f"A point: {a_point_pos}")
-    print(f"B point: {b_point_pos}")
-    print(f"Walls: {walls_pos}")
-    print("")
 
 
 def create_b(event):
