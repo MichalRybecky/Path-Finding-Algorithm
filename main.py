@@ -36,26 +36,28 @@ class Node(object):
         self.parent = None
         self.closed = False
 
-    def get_f_cost(self):
-        # Getting node F cost
-        self.f = self.g + self.h
-
     def draw_node(self, color):
         # Draw square and G, H and F cost in square
         c.create_rectangle(self.x, self.y, self.x + 50, self.y + 50, fill=color)
+        # G Cost - top left
         c.create_text(self.x + 10, self.y + 10, text=int(self.g))
+        # H Cost - top right
         c.create_text(self.x + 40, self.y + 10, text=int(self.h))
+        # F Cost - center
         c.create_text(self.x + 25, self.y + 30, text=int(self.f), font="arial 15 bold")
 
-    def get_neighbours(self, x, y):
-        # Adding node neighbours to list
+    def get_neighbours(self):
+        # Adding node's neighbours to list
+        # Left column
         self.temp_neighbour_list.append([self.x - 50, self.y - 50])
         self.temp_neighbour_list.append([self.x - 50, self.y])
         self.temp_neighbour_list.append([self.x - 50, self.y + 50])
 
+        # Mid column
         self.temp_neighbour_list.append([self.x, self.y - 50])
         self.temp_neighbour_list.append([self.x, self.y + 50])
 
+        # Right column
         self.temp_neighbour_list.append([self.x + 50, self.y - 50])
         self.temp_neighbour_list.append([self.x + 50, self.y])
         self.temp_neighbour_list.append([self.x + 50, self.y + 50])
@@ -65,8 +67,9 @@ class Node(object):
 
         # Deleting nodes that are not on the grid or are walls
         for node in self.temp_neighbour_list:
-            if node[0] < 50 or node[0] >= 750 or node[1] < 50 or node[1] >= 750 or node in walls_pos or node in closed_l:
+            if node[0] < 50 or node[0] >= 750 or node[1] < 50 or node[1] >= 750 or node in walls_pos:
                 nodes_to_delete.append(node)
+
         for node in nodes_to_delete:
             self.temp_neighbour_list.remove(node)
 
@@ -78,11 +81,46 @@ class Node(object):
             node.h = heuristic(node, b_point_pos[0], b_point_pos[1])
             node.f = node.g + node.h
 
-        # for node in self.neighbour_list:
-        #     node.get_g_cost()
-        #     node.get_h_cost()
-        #     node.get_f_cost()
-        #     node.draw_node("green")
+
+def main():
+    # There is no A, B or both points on the screen
+    if not a_point_pos or not b_point_pos:
+        print("Missing point(s)")
+    # Main loop
+    else:
+        current = Node(a_point_pos[0], a_point_pos[1])
+        b_node = Node(b_point_pos[0], b_point_pos[1])
+        open_l.append(current)
+        while True:
+            current = lowest_f_cost()
+            open_l.remove(current)
+            closed_l.append(current)
+            current.draw_node("red")
+
+            if current.x == b_node.x and current.y == b_node.y:
+                win()
+                break
+
+            current.get_neighbours()
+            for neighbour in current.neighbour_list:
+                if neighbour in closed_l:
+                    continue
+
+                if neighbour not in open_l:
+                    neighbour.parent = current
+                    open_l.append(neighbour)
+
+
+
+            for node in current.neighbour_list:
+                if node not in open_l or node not in closed_l:
+                    node.draw_node("green")
+
+
+            # open_l.append(current)
+            # current.get_neighbours(current.x, current.y)
+            # current = current.lowest_f_cost()
+            # current = Node(current[0], current[1])
 
 
 def lowest_f_cost():
@@ -104,44 +142,11 @@ def heuristic(current, end_x, end_y):
     return d
 
 
-def main():
-    # There is no A, B or both points on the screen
-    if not a_point_pos or not b_point_pos:
-        print("Missing point(s)")
-    # Main loop
-    else:
-        start_node = Node(a_point_pos[0], a_point_pos[1])
-        end_node = Node(b_point_pos[0], b_point_pos[1])
-        open_l.append(start_node)
-        while True:
-            current = lowest_f_cost()
-            current.get_neighbours(current.x, current.y)
-            for node in current.neighbour_list:
-                node.draw_node("green")
-
-
-
-            break
-
-
-            # open_l.append(current)
-            # current.get_neighbours(current.x, current.y)
-            # current.get_neighbour_data(current.x, current.y)
-            # current = current.lowest_f_cost()
-            # current = Node(current[0], current[1])
-
-
-
-
 def mainboard():
     # Creating main board
     for i in range(14):
         for j in range(14):
             c.create_rectangle(j * 50 + 50, i * 50 + 50, j * 50 + 100, i * 50 + 100, fill="#E4E4E4")
-    # Clearing list
-    a_point_pos.clear()
-    b_point_pos.clear()
-    walls_pos.clear()
     # Start and Clear Buttons
     b_clear = Button(c, text="Clear", command=clear)
     b_clear.configure(width = 10, relief = FLAT)
@@ -153,13 +158,15 @@ def mainboard():
 
 def clear():
     c.create_rectangle(0, 0, WIDTH, HEIGHT, fill="#E4E4E4")
-    a_point_pos = []
-    b_point_pos = []
-    walls_pos = []
-    open_l = []
-    closed_l = []
+    a_node = None
+    b_node = None
+    a_point_pos.clear()
+    b_point_pos.clear()
+    walls_pos.clear()
+    open_l.clear()
+    closed_l.clear()
     all_neighbours = []
-    current = []
+    current = None
     mainboard()
 
 
