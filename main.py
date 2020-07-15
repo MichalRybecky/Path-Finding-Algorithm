@@ -1,3 +1,5 @@
+#!usr/bin/env python
+
 import queue
 import math
 from tkinter import *
@@ -31,6 +33,7 @@ class Node(object):
         self.g = 0
         self.h = 0
         self.f = 0
+        self.wall = False
         self.temp_neighbour_list = []
         self.neighbour_list = []
         self.parent = None
@@ -76,10 +79,13 @@ class Node(object):
         for node in self.temp_neighbour_list:
             self.neighbour_list.append(Node(node[0], node[1]))
 
+
         for node in self.neighbour_list:
             node.g = heuristic(node, a_point_pos[0], a_point_pos[1])
             node.h = heuristic(node, b_point_pos[0], b_point_pos[1])
             node.f = node.g + node.h
+            print(f"G: {int(node.g)}, H: {int(node.h)}, F:{int(node.f)}")
+
 
 
 def main():
@@ -88,45 +94,48 @@ def main():
         print("Missing point(s)")
     # Main loop
     else:
-        current = Node(a_point_pos[0], a_point_pos[1])
+        for wall in walls_pos:
+            wall = Node(wall[0], wall[1])
+            wall.wall = True
+        a_node = Node(a_point_pos[0], a_point_pos[1])
         b_node = Node(b_point_pos[0], b_point_pos[1])
-        open_l.append(current)
+        open_l.append(a_node)
         while True:
-            current = lowest_f_cost()
+            current = min(open_l, key=attrgetter('f'))
             open_l.remove(current)
             closed_l.append(current)
-            current.draw_node("red")
+
 
             if current.x == b_node.x and current.y == b_node.y:
+                for node in closed_l:
+                    node.draw_node("blue")
                 win()
                 break
 
             current.get_neighbours()
             for neighbour in current.neighbour_list:
-                if neighbour in closed_l:
+                if neighbour in closed_l or neighbour.wall == True:
+                    print("bac")
                     continue
 
                 if neighbour not in open_l:
+                    neighbour.f = heuristic(neighbour, b_point_pos[0], b_point_pos[1])
                     neighbour.parent = current
-                    open_l.append(neighbour)
-
+                    if neighbour not in open_l:
+                        open_l.append(neighbour)
 
 
             for node in current.neighbour_list:
-                if node not in open_l or node not in closed_l:
-                    node.draw_node("green")
+                node.draw_node("green")
+            current.draw_node("red")
+            c.update()
+            #c.after(500)
 
 
-            # open_l.append(current)
-            # current.get_neighbours(current.x, current.y)
-            # current = current.lowest_f_cost()
-            # current = Node(current[0], current[1])
-
-
-def lowest_f_cost():
-    # Finds and returns node (object) with lowest F cost in open_l
-    min_f_cost = min(open_l, key=attrgetter('f'))
-    return min_f_cost
+# def lowest_f_cost():
+#     # Finds and returns node (object) with lowest F cost in open_l
+#     min_f_cost = min(open_l, key=attrgetter('f'))
+#     return min_f_cost
 
 
 def heuristic(current, end_x, end_y):
@@ -139,7 +148,7 @@ def heuristic(current, end_x, end_y):
     straight_steps = maxim - minim
 
     d = math.sqrt(2) * diagonal_steps + straight_steps
-    return d
+    return abs(d)
 
 
 def mainboard():
@@ -172,6 +181,13 @@ def clear():
 
 def win():
     print("done")
+    a_x, a_y = a_point_pos[0], a_point_pos[1]
+    b_x, b_y = b_point_pos[0], b_point_pos[1]
+    c.create_rectangle(a_x, a_y, a_x + 50, a_y + 50, fill = "blue")
+    c.create_text(a_x + 25, a_y + 25, text="A", font="arial 20 bold")
+
+    c.create_rectangle(b_x, b_y, b_x + 50, b_y + 50, fill = "blue")
+    c.create_text(b_x + 25, b_y + 25, text="B", font="arial 20 bold")
 
 
 def square_clicked(x, y):
@@ -198,10 +214,10 @@ def square_overlap(x, y, type):
         if a_point_pos:
             if x == a_point_pos[0] and y == a_point_pos[1]:
                 a_point_pos.clear()
-    elif type == "overlap_wall":
-        if walls_pos:
-            if [x, y] in walls_pos:
-                walls_pos.remove([x, y])
+    # elif type == "overlap_wall":
+    #     if walls_pos:
+    #         if [x, y] in walls_pos:
+    #             walls_pos.remove([x, y])
 
 
 def create_wall(event):
@@ -209,9 +225,9 @@ def create_wall(event):
     x, y = square_clicked(event.x, event.y)
     if x < 50 or x >= 750 or y < 50 or y >= 750:
         pass
-    elif [x, y] in walls_pos:
-        square_erease(x, y)
-        walls_pos.remove([x, y])
+    # elif [x, y] in walls_pos:
+    #     square_erease(x, y)
+    #     walls_pos.remove([x, y])
     else:
         c.create_rectangle(x, y, x + 50, y + 50, fill = "grey")
         walls_pos.append([x, y])
@@ -264,7 +280,7 @@ mainboard()
 
 # Mouse buttons binding
 c.bind("<1>", create_a)
-c.bind("<2>", create_wall)
+c.bind("<B2-Motion>", create_wall)
 c.bind("<3>", create_b)
 
 
