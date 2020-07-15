@@ -33,18 +33,23 @@ class Node(object):
         self.f = 0
         self.temp_neighbour_list = []
         self.neighbour_list = []
-        self.parent = []
+        self.parent = None
+        self.closed = False
+        self.open = False
+        self.path = False
 
     def get_g_cost(self):
+        # Getting node G cost
         if self.x == a_point_pos[0] and self.y == a_point_pos[1]:
             self.g = 0
         else:
             num_of_x_squares = (abs(a_point_pos[0] - self.x))
             num_of_y_squares = (abs(a_point_pos[1] - self.y))
-
-            d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
-            d = math.sqrt(d)
-            self.g = d
+            if num_of_y_squares == num_of_x_squares:
+                self.g = num_of_x_squares / 50 * 70.71
+            else:
+                d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
+                self.g = math.sqrt(d)
 
     def get_h_cost(self):
         # Getting node H cost
@@ -53,8 +58,11 @@ class Node(object):
         else:
             num_of_x_squares = (abs(b_point_pos[0] - self.x))
             num_of_y_squares = (abs(b_point_pos[1] - self.y))
-            d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
-            self.h = math.sqrt(d)
+            if num_of_y_squares == num_of_x_squares:
+                self.h = num_of_x_squares / 50 * 70.71
+            else:
+                d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
+                self.h = math.sqrt(d)
 
     def get_f_cost(self):
         # Getting node F cost
@@ -106,13 +114,11 @@ class Node(object):
             node.get_h_cost()
             node.get_f_cost()
 
-    def lowest_f_cost(self):
-        min_f_cost = min(self.neighbour_list, key=attrgetter('f'))
-        return [min_f_cost.x, min_f_cost.y]
 
 def lowest_f_cost_not_class():
-    min_f_cost = min(open_l, key=attrgetter('f'))
-    return min_f_cost
+        min_f_cost = min(open_l, key=attrgetter('f'))
+        return min_f_cost
+
 
 def main():
     # There is no A, B or both points on the screen
@@ -120,12 +126,31 @@ def main():
         print("Missing point(s)")
     # Main loop
     else:
-        current = Node(a_point_pos[0], a_point_pos[1])
+        a_node = Node(a_point_pos[0], a_point_pos[1])
         b_node = Node(b_point_pos[0], b_point_pos[1])
-        open_l.append(current)
-        current.get_neighbours(current.x, current.y)
-        current.get_neighbour_data(current.x, current.y)
-        current.lowest_f_cost()
+        a_node.open = True
+        open_l.append(a_node)
+        while True:
+            current = lowest_f_cost_not_class()
+            current.get_neighbours(current.x, current.y)
+            current.get_neighbour_data(current.x, current.y)
+            closed_l.append(current)
+            open_l.remove(current)
+            if current.x == b_node.x and current.y == b_node.y:
+                break
+                end()
+            if current.x != a_node.x and current.y != a_node.y:
+                current.draw_node("red")
+            for neighbour in current.neighbour_list:
+                if neighbour in closed_l:
+                    continue
+                if neighbour not in open_l:
+                    neighbour.parent = current
+                    open_l.append(neighbour)
+        for node in closed_l:
+            if node.parent == True:
+                node.draw_node("blue")
+
 
 
             # open_l.append(current)
@@ -246,10 +271,6 @@ def create_b(event):
         c.create_text(x + 25, y + 25, text="B", font="arial 20 bold")
         b_point_pos.append(x)
         b_point_pos.append(y)
-    print(f"A point: {a_point_pos}")
-    print(f"B point: {b_point_pos}")
-    print(f"Walls: {walls_pos}")
-    print("")
 
 # Lists storing point and walls positions
 a_point_pos = []
