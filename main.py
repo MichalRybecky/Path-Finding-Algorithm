@@ -35,34 +35,6 @@ class Node(object):
         self.neighbour_list = []
         self.parent = None
         self.closed = False
-        self.open = False
-        self.path = False
-
-    def get_g_cost(self):
-        # Getting node G cost
-        if self.x == a_point_pos[0] and self.y == a_point_pos[1]:
-            self.g = 0
-        else:
-            num_of_x_squares = (abs(a_point_pos[0] - self.x))
-            num_of_y_squares = (abs(a_point_pos[1] - self.y))
-            if num_of_y_squares == num_of_x_squares:
-                self.g = num_of_x_squares / 50 * 70.71
-            else:
-                d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
-                self.g = math.sqrt(d)
-
-    def get_h_cost(self):
-        # Getting node H cost
-        if self.x == b_point_pos[0] and self.y == b_point_pos [1]:
-            self.h = 0
-        else:
-            num_of_x_squares = (abs(b_point_pos[0] - self.x))
-            num_of_y_squares = (abs(b_point_pos[1] - self.y))
-            if num_of_y_squares == num_of_x_squares:
-                self.h = num_of_x_squares / 50 * 70.71
-            else:
-                d = (num_of_x_squares ** 2) + (num_of_y_squares ** 2)
-                self.h = math.sqrt(d)
 
     def get_f_cost(self):
         # Getting node F cost
@@ -102,22 +74,34 @@ class Node(object):
             self.neighbour_list.append(Node(node[0], node[1]))
 
         for node in self.neighbour_list:
-            node.get_g_cost()
-            node.get_h_cost()
-            node.get_f_cost()
-            node.draw_node("green")
+            node.g = heuristic(node, a_point_pos[0], a_point_pos[1])
+            node.h = heuristic(node, b_point_pos[0], b_point_pos[1])
+            node.f = node.g + node.h
+
+        # for node in self.neighbour_list:
+        #     node.get_g_cost()
+        #     node.get_h_cost()
+        #     node.get_f_cost()
+        #     node.draw_node("green")
 
 
-    def get_neighbour_data(self, x, y):
-        for node in self.neighbour_list:
-            node.get_g_cost()
-            node.get_h_cost()
-            node.get_f_cost()
+def lowest_f_cost():
+    # Finds and returns node (object) with lowest F cost in open_l
+    min_f_cost = min(open_l, key=attrgetter('f'))
+    return min_f_cost
 
 
-def lowest_f_cost_not_class():
-        min_f_cost = min(open_l, key=attrgetter('f'))
-        return min_f_cost
+def heuristic(current, end_x, end_y):
+    # Calculates distance between two nodes
+    dx = abs(end_x - current.x)
+    dy = abs(end_y - current.y)
+    minim = min(dx, dy)
+    maxim = max(dx, dy)
+    diagonal_steps = minim
+    straight_steps = maxim - minim
+
+    d = math.sqrt(2) * diagonal_steps + straight_steps
+    return d
 
 
 def main():
@@ -126,31 +110,18 @@ def main():
         print("Missing point(s)")
     # Main loop
     else:
-        a_node = Node(a_point_pos[0], a_point_pos[1])
-        b_node = Node(b_point_pos[0], b_point_pos[1])
-        a_node.open = True
-        open_l.append(a_node)
+        start_node = Node(a_point_pos[0], a_point_pos[1])
+        end_node = Node(b_point_pos[0], b_point_pos[1])
+        open_l.append(start_node)
         while True:
-            current = lowest_f_cost_not_class()
+            current = lowest_f_cost()
             current.get_neighbours(current.x, current.y)
-            current.get_neighbour_data(current.x, current.y)
-            closed_l.append(current)
-            open_l.remove(current)
-            if current.x == b_node.x and current.y == b_node.y:
-                break
-                end()
-            if current.x != a_node.x and current.y != a_node.y:
-                current.draw_node("red")
-            for neighbour in current.neighbour_list:
-                if neighbour in closed_l:
-                    continue
-                if neighbour not in open_l:
-                    neighbour.parent = current
-                    open_l.append(neighbour)
-        for node in closed_l:
-            if node.parent == True:
-                node.draw_node("blue")
+            for node in current.neighbour_list:
+                node.draw_node("green")
 
+
+
+            break
 
 
             # open_l.append(current)
@@ -240,7 +211,7 @@ def create_wall(event):
 
 
 def create_a(event):
-    # Creating A point (starting point)
+    # Creating A point (starting node)
     x, y = square_clicked(event.x, event.y)
     if x < 50 or x >= 750 or y < 50 or y >= 750:
         pass
@@ -257,7 +228,7 @@ def create_a(event):
 
 
 def create_b(event):
-    # Creating B point (ending point)
+    # Creating B point (ending node)
     x, y = square_clicked(event.x, event.y)
     if x < 50 or x >= 750 or y < 50 or y >= 750:
         pass
