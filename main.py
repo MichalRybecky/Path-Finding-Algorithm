@@ -49,11 +49,10 @@ class Node(object):
 
     def get_neighbours(self):
         # Adding node's neighbours to list
-
         for node in nodes:
             a = False
             if node.wall == True:
-                a = False
+                continue
             elif node.x == self.x - 50 and node.y == self.y - 50:
                 a = True
             elif node.x == self.x - 50 and node.y == self.y:
@@ -80,24 +79,24 @@ class Node(object):
             node.f = node.g + node.h
 
 
-
 def main():
     # There is no A, B or both points on the screen
     if not a_point_pos or not b_point_pos:
         print("Missing point(s)")
-    # Main loop
     else:
-        for wall in walls_pos:
-            wall = Node(wall[0], wall[1])
-            wall.wall = True
         a_node = Node(a_point_pos[0], a_point_pos[1])
         b_node = Node(b_point_pos[0], b_point_pos[1])
         open_l.append(a_node)
+        # Main Loop
         while True:
             if len(open_l) == 0:
                 no_possible_path()
                 break
             current = min(open_l, key=attrgetter('f'))
+            for node in open_l:
+                if node.f == current.f and node.h < current.h:
+                    current = node
+
             open_l.remove(current)
             closed_l.append(current)
 
@@ -124,7 +123,8 @@ def main():
                 node.draw_node("green")
             current.draw_node("red")
             c.update()
-            #c.after(500)
+            c.after(100)
+
 
 
 # def lowest_f_cost():
