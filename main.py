@@ -39,6 +39,7 @@ class Node(object):
 
     def draw_node(self, color):
         # Draw square and G, H and F cost in square
+        self.f = self.g + self.h
         c.create_rectangle(self.x, self.y, self.x + 50, self.y + 50, fill=color)
         # G Cost - top left
         c.create_text(self.x + 10, self.y + 10, text=int(self.g))
@@ -49,34 +50,22 @@ class Node(object):
 
     def get_neighbours(self):
         # Adding node's neighbours to list
-        for node in nodes:
-            a = False
-            if node.wall == True:
-                continue
-            elif node.x == self.x - 50 and node.y == self.y - 50:
-                a = True
-            elif node.x == self.x - 50 and node.y == self.y:
-                a = True
-            elif node.x == self.x - 50 and node.y == self.y + 50:
-                a = True
-            elif node.x == self.x and node.y == self.y - 50:
-                a = True
-            elif node.x == self.x and node.y == self.y + 50:
-                a = True
-            elif node.x == self.x + 50 and node.y == self.y - 50:
-                a = True
-            elif node.x == self.x + 50 and node.y == self.y:
-                a = True
-            elif node.x == self.x + 50 and node.y == self.y + 50:
-                a = True
+        x = -50
+        for i in range(3):
+            y = -50
+            for j in range(3):
+                if x == 0 and y == 0:
+                    y += 50
+                    continue
+                else:
+                    check_x = self.x + x
+                    check_y = self.y + y
 
-            if a == True:
-                self.neighbour_list.append(node)
-
-        for node in self.neighbour_list:
-            node.g = heuristic(node, a_point_pos[0], a_point_pos[1])
-            node.h = heuristic(node, b_point_pos[0], b_point_pos[1])
-            node.f = node.g + node.h
+                    for node in nodes:
+                        if node.x == check_x and node.y == check_y:
+                            self.neighbour_list.append(node)
+                    y += 50
+            x += 50
 
 
 def main():
@@ -89,9 +78,11 @@ def main():
         open_l.append(a_node)
         # Main Loop
         while True:
+            # No more possible nodes to explore, meaning path is not existing
             if len(open_l) == 0:
                 no_possible_path()
                 break
+            # Selects the node with the lowest F and H cost as current
             current = min(open_l, key=attrgetter('f'))
             for node in open_l:
                 if node.f == current.f and node.h < current.h:
@@ -100,43 +91,71 @@ def main():
             open_l.remove(current)
             closed_l.append(current)
 
-
+            # Current node is on B node, meaning the path has been explored
             if current.x == b_node.x and current.y == b_node.y:
-                for node in closed_l:
-                    node.draw_node("blue")
-                win()
+                retrace()
                 break
 
+            # Getting neighbours and their data
             current.get_neighbours()
             for neighbour in current.neighbour_list:
                 if neighbour in closed_l or neighbour.wall == True:
                     continue
 
-                if neighbour not in open_l:
-                    neighbour.f = heuristic(neighbour, b_point_pos[0], b_point_pos[1])
+                new_movement_cost_to_neighbour = current.g + heuristic(current, neighbour)
+                if new_movement_cost_to_neighbour < neighbour.g or neighbour not in open_l:
+                    neighbour.g = new_movement_cost_to_neighbour
+                    neighbour.h = heuristic(neighbour, b_node)
                     neighbour.parent = current
                     if neighbour not in open_l:
                         open_l.append(neighbour)
 
 
-            for node in current.neighbour_list:
-                node.draw_node("green")
-            current.draw_node("red")
+            for node in open_l:
+                if node in current.neighbour_list:
+                    node.draw_node("green")
+            for node in closed_l:
+                if node in current.neighbour_list:
+                    node.draw_node("red")
+            draw("A")
+            draw("B")
             c.update()
-            c.after(100)
+            #c.after(100)
 
+def retrace():
+    path = []
+    dist = []
+    for node in nodes:
+        if node.x == b_point_pos[0] and node.y == b_point_pos[1]:
+            current = node
 
+    while current.x != a_point_pos[0] and current.y != a_point_pos[1]:
+        path.append(current)
+        current = current.parent
 
-# def lowest_f_cost():
-#     # Finds and returns node (object) with lowest F cost in open_l
-#     min_f_cost = min(open_l, key=attrgetter('f'))
-#     return min_f_cost
+    path[::-1]
 
+    for node in path:
+        node.draw_node("blue")
+        c.update()
+        c.after(50)
 
-def heuristic(current, end_x, end_y):
+    draw("A")
+    draw("B")
+    print("Path found! The distance is: " + b_node.g)
+
+def draw(type):
+    if type == "A":
+        c.create_rectangle(a_point_pos[0], a_point_pos[1], a_point_pos[0] + 50, a_point_pos[1] + 50, fill = "blue")
+        c.create_text(a_point_pos[0] + 25, a_point_pos[1] + 25, text="A", font="arial 20 bold")
+    else:
+        c.create_rectangle(b_point_pos[0], b_point_pos[1], b_point_pos[0] + 50, b_point_pos[1] + 50, fill = "blue")
+        c.create_text(b_point_pos[0] + 25, b_point_pos[1] + 25, text="B", font="arial 20 bold")
+
+def heuristic(current, target):
     # Calculates distance between two nodes
-    dx = abs(end_x - current.x)
-    dy = abs(end_y - current.y)
+    dx = abs(target.x - current.x)
+    dy = abs(target.y - current.y)
     minim = min(dx, dy)
     maxim = max(dx, dy)
     diagonal_steps = minim
@@ -181,7 +200,6 @@ def no_possible_path():
 
 
 def win():
-    print("done")
     a_x, a_y = a_point_pos[0], a_point_pos[1]
     b_x, b_y = b_point_pos[0], b_point_pos[1]
     c.create_rectangle(a_x, a_y, a_x + 50, a_y + 50, fill = "blue")
@@ -211,10 +229,12 @@ def square_overlap(x, y, type):
         if b_point_pos:
             if x == b_point_pos[0] and y == b_point_pos[1]:
                 b_point_pos.clear()
+                b_node = None
     elif type == "b_overlap_a":
         if a_point_pos:
             if x == a_point_pos[0] and y == a_point_pos[1]:
                 a_point_pos.clear()
+                a_node = None
 
 
 def create_wall(event):
@@ -238,10 +258,8 @@ def create_a(event):
             a_point_pos.clear()
         square_overlap(x, y, "a_overlap_b")
         square_overlap(x, y, "overlap_wall")
-        c.create_rectangle(x, y, x + 50, y + 50, fill = "blue")
-        c.create_text(x + 25, y + 25, text="A", font="arial 20 bold")
-        a_point_pos.append(x)
-        a_point_pos.append(y)
+        a_point_pos.extend([x, y])
+        draw("A")
 
 
 def create_b(event):
@@ -255,10 +273,8 @@ def create_b(event):
             b_point_pos.clear()
         square_overlap(x, y, "b_overlap_a")
         square_overlap(x, y, "overlap_wall")
-        c.create_rectangle(x, y, x + 50, y + 50, fill = "blue")
-        c.create_text(x + 25, y + 25, text="B", font="arial 20 bold")
-        b_point_pos.append(x)
-        b_point_pos.append(y)
+        b_point_pos.extend([x, y])
+        draw("B")
 
 # Lists storing point and walls positions
 a_point_pos = []
