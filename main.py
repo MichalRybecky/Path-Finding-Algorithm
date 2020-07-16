@@ -34,10 +34,8 @@ class Node(object):
         self.h = 0
         self.f = 0
         self.wall = False
-        self.temp_neighbour_list = []
         self.neighbour_list = []
         self.parent = None
-        self.closed = False
 
     def draw_node(self, color):
         # Draw square and G, H and F cost in square
@@ -51,40 +49,35 @@ class Node(object):
 
     def get_neighbours(self):
         # Adding node's neighbours to list
-        # Left column
-        self.temp_neighbour_list.append([self.x - 50, self.y - 50])
-        self.temp_neighbour_list.append([self.x - 50, self.y])
-        self.temp_neighbour_list.append([self.x - 50, self.y + 50])
 
-        # Mid column
-        self.temp_neighbour_list.append([self.x, self.y - 50])
-        self.temp_neighbour_list.append([self.x, self.y + 50])
+        for node in nodes:
+            a = False
+            if node.wall == True:
+                a = False
+            elif node.x == self.x - 50 and node.y == self.y - 50:
+                a = True
+            elif node.x == self.x - 50 and node.y == self.y:
+                a = True
+            elif node.x == self.x - 50 and node.y == self.y + 50:
+                a = True
+            elif node.x == self.x and node.y == self.y - 50:
+                a = True
+            elif node.x == self.x and node.y == self.y + 50:
+                a = True
+            elif node.x == self.x + 50 and node.y == self.y - 50:
+                a = True
+            elif node.x == self.x + 50 and node.y == self.y:
+                a = True
+            elif node.x == self.x + 50 and node.y == self.y + 50:
+                a = True
 
-        # Right column
-        self.temp_neighbour_list.append([self.x + 50, self.y - 50])
-        self.temp_neighbour_list.append([self.x + 50, self.y])
-        self.temp_neighbour_list.append([self.x + 50, self.y + 50])
-
-        nodes_to_delete = []
-        nodes_to_delete.clear()
-
-        # Deleting nodes that are not on the grid or are walls
-        for node in self.temp_neighbour_list:
-            if node[0] < 50 or node[0] >= 750 or node[1] < 50 or node[1] >= 750 or node in walls_pos:
-                nodes_to_delete.append(node)
-
-        for node in nodes_to_delete:
-            self.temp_neighbour_list.remove(node)
-
-        for node in self.temp_neighbour_list:
-            self.neighbour_list.append(Node(node[0], node[1]))
-
+            if a == True:
+                self.neighbour_list.append(node)
 
         for node in self.neighbour_list:
             node.g = heuristic(node, a_point_pos[0], a_point_pos[1])
             node.h = heuristic(node, b_point_pos[0], b_point_pos[1])
             node.f = node.g + node.h
-            print(f"G: {int(node.g)}, H: {int(node.h)}, F:{int(node.f)}")
 
 
 
@@ -101,6 +94,9 @@ def main():
         b_node = Node(b_point_pos[0], b_point_pos[1])
         open_l.append(a_node)
         while True:
+            if len(open_l) == 0:
+                no_possible_path()
+                break
             current = min(open_l, key=attrgetter('f'))
             open_l.remove(current)
             closed_l.append(current)
@@ -115,7 +111,6 @@ def main():
             current.get_neighbours()
             for neighbour in current.neighbour_list:
                 if neighbour in closed_l or neighbour.wall == True:
-                    print("bac")
                     continue
 
                 if neighbour not in open_l:
@@ -156,6 +151,8 @@ def mainboard():
     for i in range(14):
         for j in range(14):
             c.create_rectangle(j * 50 + 50, i * 50 + 50, j * 50 + 100, i * 50 + 100, fill="#E4E4E4")
+            node = Node(j * 50 + 50, i * 50 + 50)
+            nodes.append(node)
     # Start and Clear Buttons
     b_clear = Button(c, text="Clear", command=clear)
     b_clear.configure(width = 10, relief = FLAT)
@@ -177,6 +174,10 @@ def clear():
     all_neighbours = []
     current = None
     mainboard()
+
+
+def no_possible_path():
+    print("There is no path!")
 
 
 def win():
@@ -214,23 +215,16 @@ def square_overlap(x, y, type):
         if a_point_pos:
             if x == a_point_pos[0] and y == a_point_pos[1]:
                 a_point_pos.clear()
-    # elif type == "overlap_wall":
-    #     if walls_pos:
-    #         if [x, y] in walls_pos:
-    #             walls_pos.remove([x, y])
 
 
 def create_wall(event):
     # Creating walls
     x, y = square_clicked(event.x, event.y)
-    if x < 50 or x >= 750 or y < 50 or y >= 750:
-        pass
-    # elif [x, y] in walls_pos:
-    #     square_erease(x, y)
-    #     walls_pos.remove([x, y])
-    else:
-        c.create_rectangle(x, y, x + 50, y + 50, fill = "grey")
-        walls_pos.append([x, y])
+
+    for node in nodes:
+        if node.x == x and node.y == y:
+            node.wall = True
+            c.create_rectangle(x, y, x + 50, y + 50, fill = "grey")
 
 
 def create_a(event):
@@ -270,6 +264,7 @@ def create_b(event):
 a_point_pos = []
 b_point_pos = []
 walls_pos = []
+nodes = []
 open_l = []
 closed_l = []
 all_neighbours = []
