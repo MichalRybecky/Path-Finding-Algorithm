@@ -1,30 +1,26 @@
 #!usr/bin/env python
 
-import queue
-import math
+from math import sqrt
 from tkinter import *
 from operator import attrgetter
-
-root = Tk()
-root.title("Path finding algorithm")
-root.geometry("800x800")
-root.resizable(False,False)
 
 WIDTH = 800
 HEIGHT = 800
 
+root = Tk()
+root.title("Path finding algorithm")
+root.geometry(f"{WIDTH}x{HEIGHT}")
+root.resizable(False,False)
+
 c = Canvas(root, width=WIDTH, height=HEIGHT, background="#E4E4E4")
 c.pack()
-
 
 '''
 G cost = distance from A (top left)
 H cost = distance from B (top right)
 F cost = overall distance, G cost + H cost (center)
-
 Square is 50x50, diagonal is 70,71
 '''
-
 
 class Node(object):
     def __init__(self, x, y):
@@ -38,18 +34,15 @@ class Node(object):
         self.parent = None
 
     def draw_node(self, color):
-        # Draw square and G, H and F cost in square
+        # Draws node and G, H and F cost in square
         self.f = self.g + self.h
         c.create_rectangle(self.x, self.y, self.x + 50, self.y + 50, fill=color)
-        # G Cost - top left
         c.create_text(self.x + 10, self.y + 10, text=int(self.g))
-        # H Cost - top right
         c.create_text(self.x + 40, self.y + 10, text=int(self.h))
-        # F Cost - center
         c.create_text(self.x + 25, self.y + 30, text=int(self.f), font="arial 15 bold")
 
     def get_neighbours(self):
-        # Adding node's neighbours to list
+        # Adds node's neighbours to his list
         x = -50
         for i in range(3):
             y = -50
@@ -68,7 +61,7 @@ class Node(object):
             x += 50
 
 
-def main():
+def algorithm():
     # There is no A, B or both points on the screen
     if not a_point_pos or not b_point_pos:
         print("Missing point(s)")
@@ -76,7 +69,7 @@ def main():
         a_node = Node(a_point_pos[0], a_point_pos[1])
         b_node = Node(b_point_pos[0], b_point_pos[1])
         open_l.append(a_node)
-        # Main Loop
+        # Algorithm Loop
         while True:
             # No more possible nodes to explore, meaning path is not existing
             if len(open_l) == 0:
@@ -142,7 +135,7 @@ def retrace():
 
     draw("A")
     draw("B")
-    print("Path found! The distance is: " + b_node.g)
+    print("Path found!")
 
 def draw(type):
     if type == "A":
@@ -161,12 +154,13 @@ def heuristic(current, target):
     diagonal_steps = minim
     straight_steps = maxim - minim
 
-    d = math.sqrt(2) * diagonal_steps + straight_steps
+    d = sqrt(2) * diagonal_steps + straight_steps
     return abs(d)
 
 
 def mainboard():
     # Creating main board
+    nodes.clear()
     for i in range(14):
         for j in range(14):
             c.create_rectangle(j * 50 + 50, i * 50 + 50, j * 50 + 100, i * 50 + 100, fill="#E4E4E4")
@@ -176,21 +170,16 @@ def mainboard():
     b_clear = Button(c, text="Clear", command=clear)
     b_clear.configure(width = 10, relief = FLAT)
     b_clear_window = c.create_window(300, 20, anchor=CENTER, window=b_clear)
-    b_start = Button(c, text="Start", command=main)
+    b_start = Button(c, text="Start", command=algorithm)
     b_start.configure(width = 10, relief = FLAT)
     b_start_window = c.create_window(500, 20, anchor=CENTER, window=b_start)
 
 
 def clear():
-    c.create_rectangle(0, 0, WIDTH, HEIGHT, fill="#E4E4E4")
-    a_node = None
-    b_node = None
     a_point_pos.clear()
     b_point_pos.clear()
-    walls_pos.clear()
     open_l.clear()
     closed_l.clear()
-    all_neighbours = []
     current = None
     mainboard()
 
@@ -210,7 +199,7 @@ def win():
 
 
 def square_clicked(x, y):
-    # Returns which square was clicked
+    # Returns x and y of clicked square
     x_minus = x % 50
     x -= x_minus
     y_minus = y % 50
@@ -229,70 +218,54 @@ def square_overlap(x, y, type):
         if b_point_pos:
             if x == b_point_pos[0] and y == b_point_pos[1]:
                 b_point_pos.clear()
-                b_node = None
     elif type == "b_overlap_a":
         if a_point_pos:
             if x == a_point_pos[0] and y == a_point_pos[1]:
                 a_point_pos.clear()
-                a_node = None
 
 
 def create_wall(event):
     # Creating walls
     x, y = square_clicked(event.x, event.y)
-
     for node in nodes:
         if node.x == x and node.y == y:
             node.wall = True
             c.create_rectangle(x, y, x + 50, y + 50, fill = "grey")
 
 
-def create_a(event):
-    # Creating A point (starting node)
+def create_node(event):
+    # Creates A or B node
     x, y = square_clicked(event.x, event.y)
-    if x < 50 or x >= 750 or y < 50 or y >= 750:
-        pass
-    else:
-        if a_point_pos:
-            square_erease(a_point_pos[0], a_point_pos[1])
-            a_point_pos.clear()
-        square_overlap(x, y, "a_overlap_b")
-        square_overlap(x, y, "overlap_wall")
-        a_point_pos.extend([x, y])
-        draw("A")
-
-
-def create_b(event):
-    # Creating B point (ending node)
-    x, y = square_clicked(event.x, event.y)
-    if x < 50 or x >= 750 or y < 50 or y >= 750:
-        pass
-    else:
-        if b_point_pos:
-            square_erease(b_point_pos[0], b_point_pos[1])
-            b_point_pos.clear()
-        square_overlap(x, y, "b_overlap_a")
-        square_overlap(x, y, "overlap_wall")
-        b_point_pos.extend([x, y])
-        draw("B")
+    if not a_point_pos or not b_point_pos:
+        if not a_point_pos:
+            if x < 50 or x >= 750 or y < 50 or y >= 750:
+                pass
+            else:
+                square_overlap(x, y, "a_overlap_b")
+                square_overlap(x, y, "overlap_wall")
+                a_point_pos.extend([x, y])
+                draw("A")
+        else:
+            if x < 50 or x >= 750 or y < 50 or y >= 750:
+                pass
+            else:
+                square_overlap(x, y, "b_overlap_a")
+                square_overlap(x, y, "overlap_wall")
+                b_point_pos.extend([x, y])
+                draw("B")
 
 # Lists storing point and walls positions
 a_point_pos = []
 b_point_pos = []
-walls_pos = []
 nodes = []
 open_l = []
 closed_l = []
-all_neighbours = []
-current = []
-
 
 mainboard()
 
 # Mouse buttons binding
-c.bind("<1>", create_a)
-c.bind("<B2-Motion>", create_wall)
-c.bind("<3>", create_b)
+c.bind("<B1-Motion>", create_wall)
+c.bind("<3>", create_node)
 
 
 root.mainloop()
