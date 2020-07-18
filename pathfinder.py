@@ -122,11 +122,15 @@ def algorithm():
 def retrace():
     path = []
     dist = []
+    a_node = None
     for node in nodes:
         if node.x == b_point_pos[0] and node.y == b_point_pos[1]:
             current = node
+    for node in nodes:
+        if node.is_a:
+            a_node = node
 
-    while current.x != a_point_pos[0] and current.y != a_point_pos[1]:
+    while current != a_node:
         path.append(current)
         current = current.parent
 
@@ -180,7 +184,7 @@ def mainboard():
     b_start_window = c.create_window(500, 20, anchor=CENTER, window=b_start)
     # Check for drawing data
     check_data = Checkbutton(c, text="Draw data", var=draw_data)
-    check_data_window = c.create_window(50, 20, anchor=W, window=check_data)
+    check_data_window = c.create_window(WIDTH - 50, HEIGHT - 30, anchor=E, window=check_data)
     # Labels
     text = "Click right mouse button to draw Start and End point on the grid."
     c.create_text(20, HEIGHT - 35, text=text, anchor=W, font="System 15 normal")
@@ -210,6 +214,7 @@ def square_erease(x, y):
     c.create_rectangle(x, y, x + 50, y + 50, fill="#E4E4E4")
 
 
+# This function is no longer working, need to fix it
 def square_overlap(x, y, type):
     # Overlap handling
     if type == "a_overlap_b":
@@ -240,6 +245,7 @@ def create_node(event):
         for node in nodes:
             if node.x == x and node.y == y:
                 node.is_a = True
+                a_node = node
                 a_point_pos.extend([x, y])
                 draw("A")
     else:
@@ -248,6 +254,7 @@ def create_node(event):
         for node in nodes:
             if node.x == x and node.y == y:
                 node.is_b = True
+                b_node = node
                 b_point_pos.extend([x, y])
                 draw("B")
 
@@ -255,8 +262,6 @@ def create_node(event):
 draw_data = StringVar()
 a_point_pos = []
 b_point_pos = []
-a_node = None
-b_node = None
 nodes = []
 open_l = []
 closed_l = []
@@ -264,7 +269,7 @@ closed_l = []
 mainboard()
 
 # Mouse buttons binding
-c.bind("<B1-Motion>", create_swall)
+c.bind("<B1-Motion>", create_wall)
 c.bind("<3>", create_node)
 
 
