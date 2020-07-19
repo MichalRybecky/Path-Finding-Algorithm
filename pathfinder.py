@@ -4,15 +4,16 @@ from math import sqrt
 from tkinter import *
 from operator import attrgetter
 
+# WIDTH is both width and height
 WIDTH = 800
-HEIGHT = 800
+NODE_SIZE = 25
 
 root = Tk()
 root.title("Path finding algorithm")
-root.geometry(f"{WIDTH}x{HEIGHT}")
+root.geometry(f"{WIDTH}x{WIDTH}")
 root.resizable(False,False)
 
-c = Canvas(root, width=WIDTH, height=HEIGHT, background="#E4E4E4")
+c = Canvas(root, width=WIDTH, height=WIDTH, background="#E4E4E4")
 c.pack()
 
 '''
@@ -38,20 +39,20 @@ class Node(object):
     def draw_node(self, color):
         # Draws node and G, H and F cost in square
         self.f = self.g + self.h
-        c.create_rectangle(self.x, self.y, self.x + 50, self.y + 50, fill=color)
+        c.create_rectangle(self.x, self.y, self.x + NODE_SIZE, self.y + NODE_SIZE, fill=color)
         if not draw_data.get():
-            c.create_text(self.x + 10, self.y + 10, text=int(self.g))
-            c.create_text(self.x + 40, self.y + 10, text=int(self.h))
-            c.create_text(self.x + 25, self.y + 30, text=int(self.f), font="arial 15 bold")
+            c.create_text(self.x + NODE_SIZE / 4, self.y + NODE_SIZE / 5, text=int(self.g), font=f"arial {int(NODE_SIZE / 5)}")
+            c.create_text(self.x + NODE_SIZE / 4 * 3, self.y + NODE_SIZE / 5, text=int(self.h), font=f"arial {int(NODE_SIZE / 5)}")
+            c.create_text(self.x + NODE_SIZE / 2, self.y + NODE_SIZE / 5 * 3, text=int(self.f), font=f"arial {int(NODE_SIZE / 10 * 3)} bold")
 
     def get_neighbours(self):
         # Adds node's neighbours to his list
-        x = -50
+        x = -NODE_SIZE
         for i in range(3):
-            y = -50
+            y = -NODE_SIZE
             for j in range(3):
                 if x == 0 and y == 0:
-                    y += 50
+                    y += NODE_SIZE
                     continue
                 else:
                     check_x = self.x + x
@@ -60,8 +61,8 @@ class Node(object):
                     for node in nodes:
                         if node.x == check_x and node.y == check_y:
                             self.neighbour_list.append(node)
-                    y += 50
-            x += 50
+                    y += NODE_SIZE
+            x += NODE_SIZE
 
 
 def algorithm():
@@ -108,7 +109,7 @@ def algorithm():
                     if neighbour not in open_l:
                         open_l.append(neighbour)
 
-
+            # Drawing only neighbourous nodes for faster execution
             for node in open_l:
                 if node in current.neighbour_list:
                     node.draw_node("green")
@@ -120,6 +121,7 @@ def algorithm():
             c.update()
 
 def retrace():
+    # Retraces and redraws the shortest path after the path has been found
     path = []
     dist = []
     a_node = None
@@ -147,11 +149,11 @@ def retrace():
 def draw(type):
     # Draws either A or B node, depending on the input
     if type == "A":
-        c.create_rectangle(a_point_pos[0], a_point_pos[1], a_point_pos[0] + 50, a_point_pos[1] + 50, fill = "blue")
-        c.create_text(a_point_pos[0] + 25, a_point_pos[1] + 25, text="A", font="arial 20 bold")
+        c.create_rectangle(a_point_pos[0], a_point_pos[1], a_point_pos[0] + NODE_SIZE, a_point_pos[1] + NODE_SIZE, fill = "blue")
+        c.create_text(a_point_pos[0] + NODE_SIZE / 2, a_point_pos[1] + NODE_SIZE / 2, text="A", font="arial 20 bold")
     else:
-        c.create_rectangle(b_point_pos[0], b_point_pos[1], b_point_pos[0] + 50, b_point_pos[1] + 50, fill = "blue")
-        c.create_text(b_point_pos[0] + 25, b_point_pos[1] + 25, text="B", font="arial 20 bold")
+        c.create_rectangle(b_point_pos[0], b_point_pos[1], b_point_pos[0] + NODE_SIZE, b_point_pos[1] + NODE_SIZE, fill = "blue")
+        c.create_text(b_point_pos[0] + NODE_SIZE / 2, b_point_pos[1] + NODE_SIZE / 2, text="B", font="arial 20 bold")
 
 
 def heuristic(current, target):
@@ -168,13 +170,20 @@ def heuristic(current, target):
 
 
 def mainboard():
-    # Creating main board
+    # Grid and adding nodes to objects
     nodes.clear()
-    for i in range(14):
-        for j in range(14):
-            c.create_rectangle(j * 50 + 50, i * 50 + 50, j * 50 + 100, i * 50 + 100, fill="#E4E4E4")
-            node = Node(j * 50 + 50, i * 50 + 50)
+    i = 50
+    j = 50
+    while i < WIDTH - 50:
+        while j < WIDTH - 50:
+            c.create_rectangle(i, j, i + NODE_SIZE, j + NODE_SIZE, fill="#E4E4E4")
+            node = Node(i, j)
             nodes.append(node)
+            j += NODE_SIZE
+        j = 50
+        i += NODE_SIZE
+        print(i)
+
     # Start and Clear Buttons
     b_clear = Button(c, text="Clear", command=clear)
     b_clear.configure(width = 10, relief = FLAT)
@@ -184,47 +193,39 @@ def mainboard():
     b_start_window = c.create_window(500, 20, anchor=CENTER, window=b_start)
     # Check for drawing data
     check_data = Checkbutton(c, text="Draw data", var=draw_data)
-    check_data_window = c.create_window(WIDTH - 50, HEIGHT - 30, anchor=E, window=check_data)
+    check_data_window = c.create_window(WIDTH - 50, WIDTH - 30, anchor=E, window=check_data)
     # Labels
     text = "Click right mouse button to draw Start and End point on the grid."
-    c.create_text(20, HEIGHT - 35, text=text, anchor=W, font="System 15 normal")
+    c.create_text(20, WIDTH - 35, text=text, anchor=W, font="System 15 normal")
     text = "Click and drag left mouse button to draw Walls."
-    c.create_text(20, HEIGHT - 15, text=text, anchor=W, font="System 15 normal")
+    c.create_text(20, WIDTH - 15, text=text, anchor=W, font="System 15 normal")
 
 def clear():
     a_point_pos.clear()
     b_point_pos.clear()
     open_l.clear()
     closed_l.clear()
-    current = None
     mainboard()
 
 
 def square_clicked(x, y):
     # Returns x and y of clicked square
-    x_minus = x % 50
-    x -= x_minus
-    y_minus = y % 50
-    y -= y_minus
+    x -= x % NODE_SIZE
+    y -= y % NODE_SIZE
     return x, y
 
 
 def square_erease(x, y):
     # Ereases square
-    c.create_rectangle(x, y, x + 50, y + 50, fill="#E4E4E4")
+    c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill="#E4E4E4")
 
 
-# This function is no longer working, need to fix it
-def square_overlap(x, y, type):
-    # Overlap handling
-    if type == "a_overlap_b":
-        if b_point_pos:
-            if x == b_point_pos[0] and y == b_point_pos[1]:
-                b_point_pos.clear()
-    elif type == "b_overlap_a":
-        if a_point_pos:
-            if x == a_point_pos[0] and y == a_point_pos[1]:
-                a_point_pos.clear()
+def square_overlap(x, y):
+    # Overlap of nodes handling
+    for node in nodes:
+        if node.x == x and node.y == y:
+            if node.wall == False or node.is_a or node.is_b:
+                return True
 
 
 def create_wall(event):
@@ -233,30 +234,27 @@ def create_wall(event):
     for node in nodes:
         if node.x == x and node.y == y:
             node.wall = True
-            c.create_rectangle(x, y, x + 50, y + 50, fill = "grey")
+            c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill = "grey")
 
 
 def create_node(event):
     # Creates A or B node
     x, y = square_clicked(event.x, event.y)
-    if not a_point_pos:
-        square_overlap(x, y, "a_overlap_b")
-        square_overlap(x, y, "overlap_wall")
-        for node in nodes:
-            if node.x == x and node.y == y:
-                node.is_a = True
-                a_node = node
-                a_point_pos.extend([x, y])
-                draw("A")
-    else:
-        square_overlap(x, y, "b_overlap_a")
-        square_overlap(x, y, "overlap_wall")
-        for node in nodes:
-            if node.x == x and node.y == y:
-                node.is_b = True
-                b_node = node
-                b_point_pos.extend([x, y])
-                draw("B")
+    if square_overlap(x, y):
+        if not a_point_pos:
+            for node in nodes:
+                if node.x == x and node.y == y:
+                    node.is_a = True
+                    a_node = node
+                    a_point_pos.extend([x, y])
+                    draw("A")
+        else:
+            for node in nodes:
+                if node.x == x and node.y == y:
+                    node.is_b = True
+                    b_node = node
+                    b_point_pos.extend([x, y])
+                    draw("B")
 
 # Lists storing point and walls positions
 draw_data = StringVar()
