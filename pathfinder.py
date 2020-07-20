@@ -6,7 +6,7 @@ from operator import attrgetter
 
 # WIDTH is both width and height
 WIDTH = 800
-NODE_SIZE = 25
+NODE_SIZE = 50
 
 root = Tk()
 root.title("Path finding algorithm")
