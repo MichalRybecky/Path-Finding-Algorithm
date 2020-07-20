@@ -1,0 +1,10 @@
+=========================
+A* Path Finding Algorithm
+=========================
+
+Bugs/Errors:
+    - square_overlap function is not working
+
+Features:
+    - choose any grid size
+    - page specific to how to use this

@@ -19,7 +19,7 @@ c.pack()
 '''
 G cost = distance from A (top left)
 H cost = distance from B (top right)
-F cost = overall distance, G cost + H cost (center)
+F cost = overall distance, G cost + H cost (center)sublime text 3 programming settings
 Square is 50x50, diagonal is 70,71
 '''
 
@@ -120,6 +120,8 @@ def algorithm():
             draw("B")
             c.update()
 
+
+
 def retrace():
     # Retraces and redraws the shortest path after the path has been found
     path = []
@@ -141,8 +143,6 @@ def retrace():
         draw("B")
         c.update()
         c.after(50)
-
-
     print("Path found!")
 
 
@@ -199,6 +199,7 @@ def mainboard():
     c.create_text(20, WIDTH - 35, text=text, anchor=W, font="System 15 normal")
     text = "Click and drag left mouse button to draw Walls."
     c.create_text(20, WIDTH - 15, text=text, anchor=W, font="System 15 normal")
+
 
 def clear():
     a_point_pos.clear()
