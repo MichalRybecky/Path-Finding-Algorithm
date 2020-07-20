@@ -232,6 +232,7 @@ def square_overlap(x, y):
         if node.x == x and node.y == y:
             if node.wall == False or node.is_a or node.is_b:
                 return True
+                break
 
 
 def create_wall(event):
@@ -241,6 +242,7 @@ def create_wall(event):
         if node.x == x and node.y == y:
             node.wall = True
             c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill = "grey")
+            break
 
 
 def create_node(event):
@@ -254,6 +256,7 @@ def create_node(event):
                     a_node = node
                     a_point_pos.extend([x, y])
                     draw("A")
+                    break
         else:
             for node in nodes:
                 if node.x == x and node.y == y:
@@ -261,6 +264,7 @@ def create_node(event):
                     b_node = node
                     b_point_pos.extend([x, y])
                     draw("B")
+                    break
 
 # Lists storing point and walls positions
 draw_data = StringVar()
