@@ -6,7 +6,7 @@ from operator import attrgetter
 
 # WIDTH is both width and height
 WIDTH = 800
-NODE_SIZE = 50
+NODE_SIZE = 25
 
 root = Tk()
 root.title("Path finding algorithm")
@@ -73,6 +73,7 @@ def algorithm():
         for node in nodes:
             if node.is_a:
                 open_l.append(node)
+                break
         # Algorithm Loop
         while True:
             # No more possible nodes to explore, meaning path is not existing
@@ -84,6 +85,7 @@ def algorithm():
             for node in open_l:
                 if node.f == current.f and node.h < current.h:
                     current = node
+                    break
 
             open_l.remove(current)
             closed_l.append(current)
@@ -105,6 +107,7 @@ def algorithm():
                     for node in nodes:
                         if node.is_b:
                             neighbour.h = heuristic(neighbour, node)
+                            break
                     neighbour.parent = current
                     if neighbour not in open_l:
                         open_l.append(neighbour)
@@ -113,6 +116,7 @@ def algorithm():
             for node in open_l:
                 if node in current.neighbour_list:
                     node.draw_node("green")
+
             for node in closed_l:
                 if node in current.neighbour_list:
                     node.draw_node("red")
@@ -130,9 +134,11 @@ def retrace():
     for node in nodes:
         if node.x == b_point_pos[0] and node.y == b_point_pos[1]:
             current = node
+            break
     for node in nodes:
         if node.is_a:
             a_node = node
+            break
 
     while current != a_node:
         path.append(current)
@@ -182,7 +188,6 @@ def mainboard():
             j += NODE_SIZE
         j = 50
         i += NODE_SIZE
-        print(i)
 
     # Start and Clear Buttons
     b_clear = Button(c, text="Clear", command=clear)
