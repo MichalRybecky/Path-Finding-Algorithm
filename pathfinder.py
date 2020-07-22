@@ -190,20 +190,45 @@ def mainboard():
         i += NODE_SIZE
 
     # Start and Clear Buttons
-    b_clear = Button(c, text="Clear", command=clear)
-    b_clear.configure(width = 10, relief = FLAT)
-    b_clear_window = c.create_window(300, 20, anchor=CENTER, window=b_clear)
     b_start = Button(c, text="Start", command=algorithm)
     b_start.configure(width = 10, relief = FLAT)
-    b_start_window = c.create_window(500, 20, anchor=CENTER, window=b_start)
+    b_start_window = c.create_window(WIDTH / 5, 20, anchor=CENTER, window=b_start)
+    b_clear = Button(c, text="Clear", command=clear)
+    b_clear.configure(width = 10, relief = FLAT)
+    b_clear_window = c.create_window(WIDTH / 5 * 2, 20, anchor=CENTER, window=b_clear)
+    b_about = Button(c, text="About", command=about)
+    b_about.configure(width = 10, relief = FLAT)
+    b_about_window = c.create_window(WIDTH / 5 * 3, 20, anchor=CENTER, window=b_about)
     # Check for drawing data
     check_data = Checkbutton(c, text="Draw data", var=draw_data)
-    check_data_window = c.create_window(WIDTH - 50, WIDTH - 30, anchor=E, window=check_data)
+    check_data_window = c.create_window(WIDTH / 5 * 4, 20, anchor=CENTER, window=check_data)
+
+
+def about():
+    WIDTH_A = WIDTH
+    HEIGHT_A = int(WIDTH / 2)
+    about = Tk()
+    about.title("Path finding algorithm")
+    about.geometry(f"{WIDTH_A}x{HEIGHT_A}")
+    about.resizable(False,False)
+    c_about = Canvas(about, width=WIDTH_A, height=HEIGHT_A, background="#E4E4E4")
+    c_about.pack()
+
     # Labels
-    text = "Click right mouse button to draw Start and End point on the grid."
-    c.create_text(20, WIDTH - 35, text=text, anchor=W, font="System 15 normal")
-    text = "Click and drag left mouse button to draw Walls."
-    c.create_text(20, WIDTH - 15, text=text, anchor=W, font="System 15 normal")
+    text = "How to use this program:"
+    c_about.create_text(20, 20, text=text, anchor=W, font="System 20 normal")
+    text = "Click right mouse button to draw Start/A and End/B point on the grid."
+    c_about.create_text(20, 50, text=text, anchor=W, font="System 15 normal")
+    text = "Drag left mouse button to draw Walls."
+    c_about.create_text(20, 80, text=text, anchor=W, font="System 15 normal")
+    text = "Click on Start button to begin the algorithm."
+    c_about.create_text(20, 110, text=text, anchor=W, font="System 15 normal")
+    text = "Use Clear button to clear the grid and repeat."
+    c_about.create_text(20, 140, text=text, anchor=W, font="System 15 normal")
+
+    about.mainloop()
+    c_about.mainloop()
+
 
 
 def clear():
