@@ -85,7 +85,6 @@ def algorithm():
             for node in open_l:
                 if node.f == current.f and node.h < current.h:
                     current = node
-                    break
 
             open_l.remove(current)
             closed_l.append(current)
