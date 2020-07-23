@@ -11,7 +11,7 @@ NODE_SIZE = 25
 root = Tk()
 root.title("Path finding algorithm")
 root.geometry(f"{WIDTH}x{WIDTH}")
-root.resizable(False,False)
+root.resizable(False, False)
 
 c = Canvas(root, width=WIDTH, height=WIDTH, background="#E4E4E4")
 c.pack()
@@ -41,16 +41,19 @@ class Node(object):
         self.f = self.g + self.h
         c.create_rectangle(self.x, self.y, self.x + NODE_SIZE, self.y + NODE_SIZE, fill=color)
         if not draw_data.get():
-            c.create_text(self.x + NODE_SIZE / 4, self.y + NODE_SIZE / 5, text=int(self.g), font=f"arial {int(NODE_SIZE / 5)}")
-            c.create_text(self.x + NODE_SIZE / 4 * 3, self.y + NODE_SIZE / 5, text=int(self.h), font=f"arial {int(NODE_SIZE / 5)}")
-            c.create_text(self.x + NODE_SIZE / 2, self.y + NODE_SIZE / 5 * 3, text=int(self.f), font=f"arial {int(NODE_SIZE / 10 * 3)} bold")
+            c.create_text(self.x + NODE_SIZE / 4, self.y + NODE_SIZE / 5, text=int(self.g),
+                          font=f"arial {int(NODE_SIZE / 5)}")
+            c.create_text(self.x + NODE_SIZE / 4 * 3, self.y + NODE_SIZE / 5, text=int(self.h),
+                          font=f"arial {int(NODE_SIZE / 5)}")
+            c.create_text(self.x + NODE_SIZE / 2, self.y + NODE_SIZE / 5 * 3, text=int(self.f),
+                          font=f"arial {int(NODE_SIZE / 10 * 3)} bold")
 
     def get_neighbours(self):
         # Adds node's neighbours to his list
         x = -NODE_SIZE
-        for i in range(3):
+        for _ in range(3):
             y = -NODE_SIZE
-            for j in range(3):
+            for _ in range(3):
                 if x == 0 and y == 0:
                     y += NODE_SIZE
                     continue
@@ -97,7 +100,7 @@ def algorithm():
             # Getting neighbours and their data
             current.get_neighbours()
             for neighbour in current.neighbour_list:
-                if neighbour in closed_l or neighbour.wall == True:
+                if neighbour in closed_l or neighbour.wall:
                     continue
 
                 new_movement_cost_to_neighbour = current.g + heuristic(current, neighbour)
@@ -128,7 +131,6 @@ def algorithm():
 def retrace():
     # Retraces and redraws the shortest path after the path has been found
     path = []
-    dist = []
     a_node = None
     for node in nodes:
         if node.x == b_point_pos[0] and node.y == b_point_pos[1]:
@@ -154,24 +156,28 @@ def retrace():
 def draw(type):
     # Draws either A or B node, depending on the input
     if type == "A":
-        c.create_rectangle(a_point_pos[0], a_point_pos[1], a_point_pos[0] + NODE_SIZE, a_point_pos[1] + NODE_SIZE, fill = "blue")
-        c.create_text(a_point_pos[0] + NODE_SIZE / 2, a_point_pos[1] + NODE_SIZE / 2, text="A", font="arial 20 bold")
+        c.create_rectangle(a_point_pos[0], a_point_pos[1],
+                           a_point_pos[0] + NODE_SIZE, a_point_pos[1] + NODE_SIZE, fill="blue")
+        c.create_text(a_point_pos[0] + NODE_SIZE / 2,
+                           a_point_pos[1] + NODE_SIZE / 2, text="A", font="arial 20 bold")
     else:
-        c.create_rectangle(b_point_pos[0], b_point_pos[1], b_point_pos[0] + NODE_SIZE, b_point_pos[1] + NODE_SIZE, fill = "blue")
-        c.create_text(b_point_pos[0] + NODE_SIZE / 2, b_point_pos[1] + NODE_SIZE / 2, text="B", font="arial 20 bold")
+        c.create_rectangle(b_point_pos[0], b_point_pos[1],
+                           b_point_pos[0] + NODE_SIZE, b_point_pos[1] + NODE_SIZE, fill="blue")
+        c.create_text(b_point_pos[0] + NODE_SIZE / 2,
+                      b_point_pos[1] + NODE_SIZE / 2, text="B", font="arial 20 bold")
 
 
 def heuristic(current, target):
     # Calculates distance between two nodes
-    dx = abs(target.x - current.x)
-    dy = abs(target.y - current.y)
-    minim = min(dx, dy)
-    maxim = max(dx, dy)
-    diagonal_steps = minim
-    straight_steps = maxim - minim
+    dist_x = abs(target.x - current.x)
+    dist_y = abs(target.y - current.y)
+    minimum = min(dist_x, dist_y)
+    maximum = max(dist_x, dist_y)
+    diagonal_steps = minimum
+    straight_steps = maximum - minimum
 
-    d = sqrt(2) * diagonal_steps + straight_steps
-    return abs(d)
+    dist = sqrt(2) * diagonal_steps + straight_steps
+    return abs(dist)
 
 
 def mainboard():
@@ -190,17 +196,17 @@ def mainboard():
 
     # Start and Clear Buttons
     b_start = Button(c, text="Start", command=algorithm)
-    b_start.configure(width = 10, relief = FLAT)
-    b_start_window = c.create_window(WIDTH / 5, 20, anchor=CENTER, window=b_start)
+    b_start.configure(width=10, relief=FLAT)
+    c.create_window(WIDTH / 5, 20, anchor=CENTER, window=b_start)
     b_clear = Button(c, text="Clear", command=clear)
-    b_clear.configure(width = 10, relief = FLAT)
-    b_clear_window = c.create_window(WIDTH / 5 * 2, 20, anchor=CENTER, window=b_clear)
+    b_clear.configure(width=10, relief=FLAT)
+    c.create_window(WIDTH / 5 * 2, 20, anchor=CENTER, window=b_clear)
     b_about = Button(c, text="About", command=about)
-    b_about.configure(width = 10, relief = FLAT)
-    b_about_window = c.create_window(WIDTH / 5 * 3, 20, anchor=CENTER, window=b_about)
+    b_about.configure(width=10, relief=FLAT)
+    c.create_window(WIDTH / 5 * 3, 20, anchor=CENTER, window=b_about)
     # Check for drawing data
     check_data = Checkbutton(c, text="Draw data", var=draw_data)
-    check_data_window = c.create_window(WIDTH / 5 * 4, 20, anchor=CENTER, window=check_data)
+    c.create_window(WIDTH / 5 * 4, 20, anchor=CENTER, window=check_data)
 
 
 def about():
@@ -209,7 +215,7 @@ def about():
     about = Tk()
     about.title("Path finding algorithm")
     about.geometry(f"{WIDTH_A}x{HEIGHT_A}")
-    about.resizable(False,False)
+    about.resizable(False, False)
     c_about = Canvas(about, width=WIDTH_A, height=HEIGHT_A, background="#E4E4E4")
     c_about.pack()
 
@@ -254,7 +260,7 @@ def square_overlap(x, y):
     # Overlap of nodes handling
     for node in nodes:
         if node.x == x and node.y == y:
-            if node.wall == False or node.is_a or node.is_b:
+            if not node.wall or node.is_a or node.is_b:
                 return True
                 break
 
