@@ -1,5 +1,6 @@
 #!usr/bin/env python
 
+from time import time
 from math import sqrt
 from tkinter import *
 from operator import attrgetter
@@ -16,40 +17,49 @@ root.resizable(False, False)
 c = Canvas(root, width=WIDTH, height=WIDTH, background="#E4E4E4")
 c.pack()
 
-'''
+"""
+IMPORTANT VALUES:
 G cost = distance from A (top left)
 H cost = distance from B (top right)
-F cost = overall distance, G cost + H cost (center)sublime text 3 programming settings
+F cost = overall distance, G cost + H cost (center)
 Square is 50x50, diagonal is 70,71
-'''
+"""
 
-class Node(object):
+class Node:
+    """
+    Node object is every node (square) on the screen.
+    """
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.g = 0
-        self.h = 0
-        self.f = 0
+        self.g_cost = 0
+        self.h_cost = 0
+        self.f_cost = 0
         self.is_a = False
         self.is_b = False
         self.wall = False
-        self.neighbour_list = []
         self.parent = None
+        self.neighbour_list = []
+
 
     def draw_node(self, color):
-        # Draws node and G, H and F cost in square
-        self.f = self.g + self.h
+        """
+        Draws node and G, H and F cost in square
+        """
+        self.f_cost = self.g_cost + self.h_cost
         c.create_rectangle(self.x, self.y, self.x + NODE_SIZE, self.y + NODE_SIZE, fill=color)
         if not draw_data.get():
-            c.create_text(self.x + NODE_SIZE / 4, self.y + NODE_SIZE / 5, text=int(self.g),
+            c.create_text(self.x + NODE_SIZE / 4, self.y + NODE_SIZE / 5, text=int(self.g_cost),
                           font=f"arial {int(NODE_SIZE / 5)}")
-            c.create_text(self.x + NODE_SIZE / 4 * 3, self.y + NODE_SIZE / 5, text=int(self.h),
+            c.create_text(self.x + NODE_SIZE / 4 * 3, self.y + NODE_SIZE / 5, text=int(self.h_cost),
                           font=f"arial {int(NODE_SIZE / 5)}")
-            c.create_text(self.x + NODE_SIZE / 2, self.y + NODE_SIZE / 5 * 3, text=int(self.f),
+            c.create_text(self.x + NODE_SIZE / 2, self.y + NODE_SIZE / 5 * 3, text=int(self.f_cost),
                           font=f"arial {int(NODE_SIZE / 10 * 3)} bold")
 
     def get_neighbours(self):
-        # Adds node's neighbours to his list
+        """
+        Adds node's neighbours to his list
+        """
         x = -NODE_SIZE
         for _ in range(3):
             y = -NODE_SIZE
@@ -68,7 +78,20 @@ class Node(object):
             x += NODE_SIZE
 
 
+class RuntimeError(Exception):
+    """
+    Exception raised when a specific error code is needed
+    """
+    def __init__(self, message, code):
+        super().__init__(f'Error code {code}: {message}')
+        self.code = code
+
+
 def algorithm():
+    """
+    Main algorithm of program, this is where the magic happens
+    """
+    start = time()
     # There is no A, B or both points on the screen
     if not a_point_pos or not b_point_pos:
         print("Missing point(s)")
@@ -82,11 +105,12 @@ def algorithm():
             # No more possible nodes to explore, meaning path is not existing
             if len(open_l) == 0:
                 print("There is no path!")
+                c.create_text(WIDTH / 2, WIDTH - 25, text='There is no path!', font='arial 20', fill='red')
                 break
             # Selects the node with the lowest F and H cost as current
-            current = min(open_l, key=attrgetter('f'))
+            current = min(open_l, key=attrgetter('f_cost'))
             for node in open_l:
-                if node.f == current.f and node.h < current.h:
+                if node.f_cost == current.f_cost and node.h_cost < current.h_cost:
                     current = node
 
             open_l.remove(current)
@@ -103,12 +127,12 @@ def algorithm():
                 if neighbour in closed_l or neighbour.wall:
                     continue
 
-                new_movement_cost_to_neighbour = current.g + heuristic(current, neighbour)
-                if new_movement_cost_to_neighbour < neighbour.g or neighbour not in open_l:
-                    neighbour.g = new_movement_cost_to_neighbour
+                new_movement_cost_to_neighbour = current.g_cost + heuristic(current, neighbour)
+                if new_movement_cost_to_neighbour < neighbour.g_cost or neighbour not in open_l:
+                    neighbour.g_cost = new_movement_cost_to_neighbour
                     for node in nodes:
                         if node.is_b:
-                            neighbour.h = heuristic(neighbour, node)
+                            neighbour.h_cost = heuristic(neighbour, node)
                             break
                     neighbour.parent = current
                     if neighbour not in open_l:
@@ -125,17 +149,21 @@ def algorithm():
             draw("A")
             draw("B")
             c.update()
-
+    runtime = float(time() - start)
+    print(f'Runtime of main algorithm: {round(runtime, 5)}')
 
 
 def retrace():
-    # Retraces and redraws the shortest path after the path has been found
+    """
+    Retraces and redraws the shortest path after the path has been found
+    """
     path = []
     a_node = None
     for node in nodes:
         if node.x == b_point_pos[0] and node.y == b_point_pos[1]:
             current = node
             break
+
     for node in nodes:
         if node.is_a:
             a_node = node
@@ -153,22 +181,10 @@ def retrace():
     print("Path found!")
 
 
-def draw(type):
-    # Draws either A or B node, depending on the input
-    if type == "A":
-        c.create_rectangle(a_point_pos[0], a_point_pos[1],
-                           a_point_pos[0] + NODE_SIZE, a_point_pos[1] + NODE_SIZE, fill="blue")
-        c.create_text(a_point_pos[0] + NODE_SIZE / 2,
-                           a_point_pos[1] + NODE_SIZE / 2, text="A", font="arial 20 bold")
-    else:
-        c.create_rectangle(b_point_pos[0], b_point_pos[1],
-                           b_point_pos[0] + NODE_SIZE, b_point_pos[1] + NODE_SIZE, fill="blue")
-        c.create_text(b_point_pos[0] + NODE_SIZE / 2,
-                      b_point_pos[1] + NODE_SIZE / 2, text="B", font="arial 20 bold")
-
-
 def heuristic(current, target):
-    # Calculates distance between two nodes
+    """
+    Calculates total distance between two nodes
+    """
     dist_x = abs(target.x - current.x)
     dist_y = abs(target.y - current.y)
     minimum = min(dist_x, dist_y)
@@ -181,7 +197,10 @@ def heuristic(current, target):
 
 
 def mainboard():
-    # Grid and adding nodes to objects
+    """
+    Grid and adding nodes to objects
+    """
+    c.create_rectangle(0, 0, WIDTH, WIDTH, fill='#E4E4E4')
     nodes.clear()
     i = 50
     j = 50
@@ -210,6 +229,12 @@ def mainboard():
 
 
 def about():
+    """
+    Opens new window with text about application
+    """
+    def create_text_about(text, y, size=15):
+        c_about.create_text(20, y, text=text, anchor=W, font=f"System {size} normal")
+
     WIDTH_A = WIDTH
     HEIGHT_A = int(WIDTH / 2)
     about = Tk()
@@ -220,20 +245,16 @@ def about():
     c_about.pack()
 
     # Labels
-    text = "How to use this program:"
-    c_about.create_text(20, 20, text=text, anchor=W, font="System 20 normal")
-    text = "Click right mouse button to draw Start/A and End/B point on the grid."
-    c_about.create_text(20, 50, text=text, anchor=W, font="System 15 normal")
-    text = "Drag left mouse button to draw Walls."
-    c_about.create_text(20, 80, text=text, anchor=W, font="System 15 normal")
-    text = "Click on Start button to begin the algorithm."
-    c_about.create_text(20, 110, text=text, anchor=W, font="System 15 normal")
-    text = "Use Clear button to clear the grid and repeat."
-    c_about.create_text(20, 140, text=text, anchor=W, font="System 15 normal")
+    texts = [["How to use this program:", 20, 20],
+             ["Click right mouse button to draw Start/A and End/B point on the grid.", 50],
+             ["Drag left mouse button to draw Walls.", 80],
+             ["Click on Start button to begin the algorithm.", 110],
+             ["Use Clear button to clear the grid and repeat.", 140]]
+    for text in texts:
+        create_text_about(*text)
 
     about.mainloop()
     c_about.mainloop()
-
 
 
 def clear():
@@ -245,28 +266,35 @@ def clear():
 
 
 def square_clicked(x, y):
-    # Returns x and y of clicked square
+    """
+    Returns x and y of clicked square
+    """
     x -= x % NODE_SIZE
     y -= y % NODE_SIZE
     return x, y
 
 
 def square_erease(x, y):
-    # Ereases square
+    """
+    Ereases square
+    """
     c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill="#E4E4E4")
 
 
 def square_overlap(x, y):
-    # Overlap of nodes handling
+    """
+    Overlap of nodes handling
+    """
     for node in nodes:
         if node.x == x and node.y == y:
             if not node.wall or node.is_a or node.is_b:
                 return True
-                break
 
 
 def create_wall(event):
-    # Creating walls
+    """
+    Creates walls
+    """
     x, y = square_clicked(event.x, event.y)
     for node in nodes:
         if node.x == x and node.y == y:
@@ -276,7 +304,9 @@ def create_wall(event):
 
 
 def create_node(event):
-    # Creates A or B node
+    """
+    Creates A or B node
+    """
     x, y = square_clicked(event.x, event.y)
     if square_overlap(x, y):
         if not a_point_pos:
@@ -296,20 +326,40 @@ def create_node(event):
                     draw("B")
                     break
 
-# Lists storing point and walls positions
-draw_data = StringVar()
-a_point_pos = []
-b_point_pos = []
-nodes = []
-open_l = []
-closed_l = []
 
-mainboard()
+def draw(type):
+    """
+    Draws either A or B node, depending on the 'type' value (Can be 'A' or 'B')
+    """
+    if type == "A":
+        c.create_rectangle(a_point_pos[0], a_point_pos[1],
+                           a_point_pos[0] + NODE_SIZE, a_point_pos[1] + NODE_SIZE, fill="blue")
+        c.create_text(a_point_pos[0] + NODE_SIZE / 2,
+                      a_point_pos[1] + NODE_SIZE / 2, text="A", font="arial 20 bold")
+    elif type == "B":
+        c.create_rectangle(b_point_pos[0], b_point_pos[1],
+                           b_point_pos[0] + NODE_SIZE, b_point_pos[1] + NODE_SIZE, fill="blue")
+        c.create_text(b_point_pos[0] + NODE_SIZE / 2,
+                      b_point_pos[1] + NODE_SIZE / 2, text="B", font="arial 20 bold")
+    else:
+        raise RuntimeError('Invalid node type', 100)
 
-# Mouse buttons binding
-c.bind("<B1-Motion>", create_wall)
-c.bind("<3>", create_node)
+
+if __name__ == "__main__":
+    # Lists storing point and walls positions
+    draw_data = StringVar()
+    a_point_pos = []
+    b_point_pos = []
+    nodes = []
+    open_l = []
+    closed_l = []
+
+    mainboard()
+
+    # Mouse buttons binding
+    c.bind("<B1-Motion>", create_wall)
+    c.bind("<3>", create_node)
 
 
-root.mainloop()
-c.mainloop()
+    root.mainloop()
+    c.mainloop()
