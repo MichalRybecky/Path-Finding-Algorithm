@@ -25,10 +25,12 @@ F cost = overall distance, G cost + H cost (center)
 Square is 50x50, diagonal is 70,71
 """
 
+
 class Node:
     """
     Node object is every node (square) on the screen.
     """
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -41,20 +43,33 @@ class Node:
         self.parent = None
         self.neighbour_list = []
 
-
     def draw_node(self, color):
         """
         Draws node and G, H and F cost in square
         """
         self.f_cost = self.g_cost + self.h_cost
-        c.create_rectangle(self.x, self.y, self.x + NODE_SIZE, self.y + NODE_SIZE, fill=color)
+        c.create_rectangle(
+            self.x, self.y, self.x + NODE_SIZE, self.y + NODE_SIZE, fill=color
+        )
         if not draw_data.get():
-            c.create_text(self.x + NODE_SIZE / 4, self.y + NODE_SIZE / 5, text=int(self.g_cost),
-                          font=f"arial {int(NODE_SIZE / 5)}")
-            c.create_text(self.x + NODE_SIZE / 4 * 3, self.y + NODE_SIZE / 5, text=int(self.h_cost),
-                          font=f"arial {int(NODE_SIZE / 5)}")
-            c.create_text(self.x + NODE_SIZE / 2, self.y + NODE_SIZE / 5 * 3, text=int(self.f_cost),
-                          font=f"arial {int(NODE_SIZE / 10 * 3)} bold")
+            c.create_text(
+                self.x + NODE_SIZE / 4,
+                self.y + NODE_SIZE / 5,
+                text=int(self.g_cost),
+                font=f"arial {int(NODE_SIZE / 5)}",
+            )
+            c.create_text(
+                self.x + NODE_SIZE / 4 * 3,
+                self.y + NODE_SIZE / 5,
+                text=int(self.h_cost),
+                font=f"arial {int(NODE_SIZE / 5)}",
+            )
+            c.create_text(
+                self.x + NODE_SIZE / 2,
+                self.y + NODE_SIZE / 5 * 3,
+                text=int(self.f_cost),
+                font=f"arial {int(NODE_SIZE / 10 * 3)} bold",
+            )
 
     def get_neighbours(self):
         """
@@ -82,8 +97,9 @@ class RuntimeError(Exception):
     """
     Exception raised when a specific error code is needed
     """
+
     def __init__(self, message, code):
-        super().__init__(f'Error code {code}: {message}')
+        super().__init__(f"Error code {code}: {message}")
         self.code = code
 
 
@@ -105,10 +121,16 @@ def algorithm():
             # No more possible nodes to explore, meaning path is not existing
             if len(open_l) == 0:
                 print("There is no path!")
-                c.create_text(WIDTH / 2, WIDTH - 25, text='There is no path!', font='arial 20', fill='red')
+                c.create_text(
+                    WIDTH / 2,
+                    WIDTH - 25,
+                    text="There is no path!",
+                    font="arial 20",
+                    fill="red",
+                )
                 break
             # Selects the node with the lowest F and H cost as current
-            current = min(open_l, key=attrgetter('f_cost'))
+            current = min(open_l, key=attrgetter("f_cost"))
             for node in open_l:
                 if node.f_cost == current.f_cost and node.h_cost < current.h_cost:
                     current = node
@@ -127,8 +149,13 @@ def algorithm():
                 if neighbour in closed_l or neighbour.wall:
                     continue
 
-                new_movement_cost_to_neighbour = current.g_cost + heuristic(current, neighbour)
-                if new_movement_cost_to_neighbour < neighbour.g_cost or neighbour not in open_l:
+                new_movement_cost_to_neighbour = current.g_cost + heuristic(
+                    current, neighbour
+                )
+                if (
+                    new_movement_cost_to_neighbour < neighbour.g_cost
+                    or neighbour not in open_l
+                ):
                     neighbour.g_cost = new_movement_cost_to_neighbour
                     for node in nodes:
                         if node.is_b:
@@ -150,7 +177,7 @@ def algorithm():
             draw("B")
             c.update()
     runtime = float(time() - start)
-    print(f'Runtime of main algorithm: {round(runtime, 5)}')
+    print(f"Runtime of main algorithm: {round(runtime, 5)}")
 
 
 def retrace():
@@ -200,7 +227,7 @@ def mainboard():
     """
     Grid and adding nodes to objects
     """
-    c.create_rectangle(0, 0, WIDTH, WIDTH, fill='#E4E4E4')
+    c.create_rectangle(0, 0, WIDTH, WIDTH, fill="#E4E4E4")
     nodes.clear()
     i = 50
     j = 50
@@ -232,6 +259,7 @@ def about():
     """
     Opens new window with text about application
     """
+
     def create_text_about(text, y, size=15):
         c_about.create_text(20, y, text=text, anchor=W, font=f"System {size} normal")
 
@@ -245,11 +273,13 @@ def about():
     c_about.pack()
 
     # Labels
-    texts = [["How to use this program:", 20, 20],
-             ["Click right mouse button to draw Start/A and End/B point on the grid.", 50],
-             ["Drag left mouse button to draw Walls.", 80],
-             ["Click on Start button to begin the algorithm.", 110],
-             ["Use Clear button to clear the grid and repeat.", 140]]
+    texts = [
+        ["How to use this program:", 20, 20],
+        ["Click right mouse button to draw Start/A and End/B point on the grid.", 50],
+        ["Drag left mouse button to draw Walls.", 80],
+        ["Click on Start button to begin the algorithm.", 110],
+        ["Use Clear button to clear the grid and repeat.", 140],
+    ]
     for text in texts:
         create_text_about(*text)
 
@@ -276,7 +306,7 @@ def square_clicked(x, y):
 
 def square_erease(x, y):
     """
-    Ereases square
+    Ereases square leaving blanc canvas
     """
     c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill="#E4E4E4")
 
@@ -293,13 +323,13 @@ def square_overlap(x, y):
 
 def create_wall(event):
     """
-    Creates walls
+    Creates walls upon mouse button 1 press and drag
     """
     x, y = square_clicked(event.x, event.y)
     for node in nodes:
-        if node.x == x and node.y == y:
+        if node.x == x and node.y == y and not node.wall:
             node.wall = True
-            c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill = "grey")
+            c.create_rectangle(x, y, x + NODE_SIZE, y + NODE_SIZE, fill="grey")
             break
 
 
@@ -332,17 +362,35 @@ def draw(type):
     Draws either A or B node, depending on the 'type' value (Can be 'A' or 'B')
     """
     if type == "A":
-        c.create_rectangle(a_point_pos[0], a_point_pos[1],
-                           a_point_pos[0] + NODE_SIZE, a_point_pos[1] + NODE_SIZE, fill="blue")
-        c.create_text(a_point_pos[0] + NODE_SIZE / 2,
-                      a_point_pos[1] + NODE_SIZE / 2, text="A", font="arial 20 bold")
+        c.create_rectangle(
+            a_point_pos[0],
+            a_point_pos[1],
+            a_point_pos[0] + NODE_SIZE,
+            a_point_pos[1] + NODE_SIZE,
+            fill="blue",
+        )
+        c.create_text(
+            a_point_pos[0] + NODE_SIZE / 2,
+            a_point_pos[1] + NODE_SIZE / 2,
+            text="A",
+            font="arial 20 bold",
+        )
     elif type == "B":
-        c.create_rectangle(b_point_pos[0], b_point_pos[1],
-                           b_point_pos[0] + NODE_SIZE, b_point_pos[1] + NODE_SIZE, fill="blue")
-        c.create_text(b_point_pos[0] + NODE_SIZE / 2,
-                      b_point_pos[1] + NODE_SIZE / 2, text="B", font="arial 20 bold")
+        c.create_rectangle(
+            b_point_pos[0],
+            b_point_pos[1],
+            b_point_pos[0] + NODE_SIZE,
+            b_point_pos[1] + NODE_SIZE,
+            fill="blue",
+        )
+        c.create_text(
+            b_point_pos[0] + NODE_SIZE / 2,
+            b_point_pos[1] + NODE_SIZE / 2,
+            text="B",
+            font="arial 20 bold",
+        )
     else:
-        raise RuntimeError('Invalid node type', 100)
+        raise RuntimeError("Invalid node type", 100)
 
 
 if __name__ == "__main__":
@@ -359,7 +407,6 @@ if __name__ == "__main__":
     # Mouse buttons binding
     c.bind("<B1-Motion>", create_wall)
     c.bind("<3>", create_node)
-
 
     root.mainloop()
     c.mainloop()
